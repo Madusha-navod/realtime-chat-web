@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+        }
+        .chat-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            max-width: 100%;
+        }
+        .messages {
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .input-group {
+            display: flex;
+        }
+        .input-group input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .input-group button {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        .input-group button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h2>Group Chat</h2>
+        <div class="messages" id="messages"></div>
+        <div class="input-group">
+            <input type="text" id="messageInput" placeholder="Type a message..." />
+            <button id="sendButton">Send</button>
+        </div>
+        <div>
+            <label for="roomInput">Enter Room Name:</label>
+            <input type="text" id="roomInput" placeholder="Enter room name" />
+            <button id="joinButton">Join Room</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        const socket = io("http://localhost:9000"); // Connect to your server
+
+        // Handle room joining
+        document.getElementById("joinButton").addEventListener("click", () => {
+            const room = document.getElementById("roomInput").value;
+            if (room) {
+                socket.emit("joinRoom", room);
+                alert(`Joined room: ${room}`);
+            }
+        });
+
+        // Listen for new messages from the server
+        socket.on("newMessage", (data) => {
+            const messagesContainer = document.getElementById("messages");
+            const newMessage = document.createElement("div");
+            newMessage.textContent = `${data.sender}: ${data.message}`;
+            messagesContainer.appendChild(newMessage);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Auto scroll to bottom
+        });
+
+        // Handle message sending
+        document.getElementById("sendButton").addEventListener("click", () => {
+            const messageInput = document.getElementById("messageInput");
+            const room = document.getElementById("roomInput").value;
+            const message = messageInput.value;
+
+            if (message && room) {
+                socket.emit("sendMessage", {
+                    room: room,
+                    message: message
+                });
+                messageInput.value = ""; // Clear input
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+        }
+        .chat-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            max-width: 100%;
+        }
+        .messages {
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .input-group {
+            display: flex;
+            margin-top: 10px;
+        }
+        .input-group input, .input-group select {
+            flex: 1;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin-right: 5px;
+        }
+        .input-group button {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        .input-group button:hover {
+            background-color: #45a049;
+        }
+        .options {
+            margin-bottom: 10px;
+        }
+        .options label {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h2>Group Chat</h2>
+        
+        <div class="options">
+            <label for="roomInput">Room:</label>
+            <select id="roomInput">
+                <option value="general">General</option>
+                <option value="sports">Sports</option>
+                <option value="technology">Technology</option>
+                <option value="entertainment">Entertainment</option>
+            </select>
+        </div>
+
+        <div class="options">
+            <label for="languageInput">Language:</label>
+            <select id="languageInput">
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="zh">Chinese</option>
+            </select>
+        </div>
+
+        <div class="messages" id="messages"></div>
+        
+        <div class="input-group">
+            <input type="text" id="messageInput" placeholder="Type a message..." />
+            <button id="sendButton">Send</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        const socket = io("http://localhost:3000"); // Connect to your server
+
+        const roomSelect = document.getElementById("roomInput");
+        const languageSelect = document.getElementById("languageInput");
+        const messageInput = document.getElementById("messageInput");
+        const messagesContainer = document.getElementById("messages");
+        const sendButton = document.getElementById("sendButton");
+
+        // Join the selected room
+        roomSelect.addEventListener("change", () => {
+            const room = roomSelect.value;
+            socket.emit("joinRoom", room);
+            appendMessage(`You joined the room: ${room}`);
+        });
+
+        // Listen for new messages from the server
+        socket.on("newMessage", (data) => {
+            appendMessage(`${data.sender}: ${data.message}`);
+        });
+
+        // Send message to the server
+        sendButton.addEventListener("click", () => {
+            const message = messageInput.value;
+            const room = roomSelect.value;
+            const language = languageSelect.value;
+
+            if (message) {
+                socket.emit("sendMessage", {
+                    room: room,
+                    message: message,
+                    language: language,
+                });
+                appendMessage(`You: ${message}`);
+                messageInput.value = ""; // Clear the input
+            }
+        });
+
+        // Append a message to the messages container
+        function appendMessage(message) {
+            const newMessage = document.createElement("div");
+            newMessage.textContent = message;
+            messagesContainer.appendChild(newMessage);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Auto-scroll to bottom
+        }
+    </script>
+</body>
+</html>
